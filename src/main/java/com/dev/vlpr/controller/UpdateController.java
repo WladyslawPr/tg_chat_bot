@@ -15,10 +15,13 @@ import static com.dev.vlpr.constants.ResponseConstants.*;
 @Log4j
 public class UpdateController {
     private TelegramBot telegramBot;
-    private MessageUtils messageUtils;
-    private UpdateProducer updateProducer;
-    public void UpdateController(MessageUtils messageUtils,
-                                 UpdateProducer updateProducer) {
+    private final MessageUtils messageUtils;
+    private final UpdateProducer updateProducer;
+
+    public UpdateController(MessageUtils messageUtils,
+                         //   @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+                            UpdateProducer updateProducer) {
+        //Could not autowire. No beans of 'UpdateProducer' type found.
         this.messageUtils = messageUtils;
         this.updateProducer = updateProducer;
     }
@@ -64,6 +67,7 @@ public class UpdateController {
         var sendMessage = messageUtils
                 .generateSendMessageWithText(update,
                         FILE_ACCEPTED_PROCESSED.getMessage());
+        setView(sendMessage);
     }
 
     private void setView(SendMessage sendMessage) {
@@ -86,3 +90,4 @@ public class UpdateController {
 
 
 }
+
