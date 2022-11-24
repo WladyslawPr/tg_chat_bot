@@ -19,9 +19,7 @@ public class UpdateController {
     private final UpdateProducer updateProducer;
 
     public UpdateController(MessageUtils messageUtils,
-                         //   @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
                             UpdateProducer updateProducer) {
-        //Could not autowire. No beans of 'UpdateProducer' type found.
         this.messageUtils = messageUtils;
         this.updateProducer = updateProducer;
     }
