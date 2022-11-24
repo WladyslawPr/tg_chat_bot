@@ -23,6 +23,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     public TelegramBot(UpdateController updateController) {
         this.updateController = updateController;
     }
+
     //pass link to tg.
     @PostConstruct
     public void init() {
