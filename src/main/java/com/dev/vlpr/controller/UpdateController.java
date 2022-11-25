@@ -14,6 +14,7 @@ import static com.dev.vlpr.constants.ResponseConstants.*;
 @Component
 @Log4j
 public class UpdateController {
+
     private TelegramBot telegramBot;
     private final MessageUtils messageUtils;
     private final UpdateProducer updateProducer;
@@ -37,7 +38,8 @@ public class UpdateController {
         if (update.getMessage() != null) {
             distributeMessagesByType(update);
         } else {
-            log.error(RECEIVED_UNSUPPORTED_MESSAGE_TYPE + " " + update);
+           // log.error("received unsupported message type " + update);
+            log.error(RECEIVED_UNSUPPORTED_MESSAGE_TYPE.getMessage() + update);
         }
     }
     // distribute messages by types of incoming data.
@@ -56,19 +58,19 @@ public class UpdateController {
 
     private void  setUnsupportedMessageTypeView(Update update) {
         var sendMessage = messageUtils
-                .generateSendMessageWithText(update,
+                .generateSendMessageWithText(update, //"unsupported message type");
                         UNSUPPORTED_MESSAGE_TYPE.getMessage());
         setView(sendMessage);
     }
 
     private void setFileIsReceivedView(Update update) {
         var sendMessage = messageUtils
-                .generateSendMessageWithText(update,
+                .generateSendMessageWithText(update,// "file accept");
                         FILE_ACCEPTED_PROCESSED.getMessage());
         setView(sendMessage);
     }
 
-    private void setView(SendMessage sendMessage) {
+    public void setView(SendMessage sendMessage) {
         telegramBot.sendAnswerMessage(sendMessage);
     }
 
