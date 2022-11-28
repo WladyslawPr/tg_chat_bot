@@ -57,7 +57,15 @@
             <version>1.18.24</version>
             <scope>provided</scope>
         </dependency>
+
         <!-- Testing -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <version>2.7.5</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- db -->
         <dependency>
             <groupId>org.postgresql</groupId>
