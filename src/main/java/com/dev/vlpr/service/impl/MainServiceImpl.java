@@ -4,6 +4,7 @@ import com.dev.vlpr.dao.AppUserDAO;
 import com.dev.vlpr.dao.RawDataDAO;
 import com.dev.vlpr.entity.AppUsers;
 import com.dev.vlpr.entity.RawData;
+import com.dev.vlpr.entity.enums.UserState;
 import com.dev.vlpr.service.MainService;
 import com.dev.vlpr.service.ProducerService;
 import lombok.extern.log4j.Log4j;
@@ -82,6 +83,7 @@ public class MainServiceImpl implements MainService {
                 .build();
         rawDataDAO.save(rawData);
     }
+
 
     private AppUsers findOrSaveAppUser(Update update) {
         User telegramUser = update.getMessage().getFrom();
