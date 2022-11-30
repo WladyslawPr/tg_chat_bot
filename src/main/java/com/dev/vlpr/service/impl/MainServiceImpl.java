@@ -13,7 +13,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 
-import static com.dev.vlpr.entity.enums.ServiceCommand.CANCEL;
+import static com.dev.vlpr.entity.enums.ServiceCommand.*;
 import static com.dev.vlpr.entity.enums.UserState.BASIC_STATE;
 import static com.dev.vlpr.entity.enums.UserState.WAIT_FOR_EMAIL_STATE;
 @Log4j
@@ -22,6 +22,9 @@ public class MainServiceImpl implements MainService {
 
     private static final String UNKNOWN_USER_STATE = "unknown user state";
     private static final String ERROR_RETRY_INPUT = "input /cancel and try again";
+    private static final String REJECT_COMMAND = "reject command";
+    private static final String WELCOME = "Welcome: To see a list of available commands type /help";
+    private static final String UNKNOWN_COMMAND = "unknown command, to see a list of available commands type /help";
     private final RawDataDAO rawDataDAO;
     private final ProducerService producerService;
     private final AppUserDAO appUserDAO;
@@ -69,11 +72,29 @@ public class MainServiceImpl implements MainService {
     }
 
     private String cancelProcess(AppUsers appUser) {
-        return null;
+        appUser.setState(BASIC_STATE);
+        appUserDAO.save(appUser);
+        return REJECT_COMMAND;
     }
 
-    private String processServiceCommand(AppUsers appUser, String text) {
-        return null;
+    private String processServiceCommand(AppUsers appUser, String cmd) {
+        if (REGISTRATION.equals(cmd)) {
+            // TODO add registration.
+            return "unavailable";
+        } else if (HELP.equals(cmd)) {
+            return help();
+        } else if (START.equals(cmd)) {
+            return WELCOME;
+        } else {
+            return UNKNOWN_COMMAND;
+        }
+
+    }
+
+    private String help() {
+        return "List of available commands;\n"
+                + "/cancel - canceling the current command;\n"
+                + "/registration - registration users.";
     }
 
 
