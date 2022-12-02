@@ -2,9 +2,12 @@ package com.dev.vlpr.service.impl;
 
 import com.dev.vlpr.dao.AppUserDAO;
 import com.dev.vlpr.dao.RawDataDAO;
+import com.dev.vlpr.entity.AppDocument;
 import com.dev.vlpr.entity.AppUsers;
 import com.dev.vlpr.entity.RawData;
 import com.dev.vlpr.entity.enums.ServiceCommand;
+import com.dev.vlpr.exceptions.UploadFileException;
+import com.dev.vlpr.service.FileService;
 import com.dev.vlpr.service.MainService;
 import com.dev.vlpr.service.ProducerService;
 import lombok.extern.log4j.Log4j;
@@ -26,6 +29,7 @@ public class MainServiceImpl implements MainService {
     private static final String WELCOME = "Welcome: To see a list of available commands type /help";
     private static final String UNKNOWN_COMMAND = "unknown command, to see a list of available commands type /help";
     private static final String DOC_UPLOAD_SUCCESS = "document uploaded successfully: link to download -  ";
+    private static final String DOC_UPLOAD_FAILED = "file upload failed, please try again";
     private static final String PHOTO_UPLOAD_SUCCESS = "photo uploaded successfully: link to download -  ";
     private static final String CANCEL_CURRENT_COMMAND = "cancel the current command with /cancel to send files.";
     private static final String REGISTER_OR_ACTIVATE = "register or activate your account to download content.";
@@ -33,12 +37,16 @@ public class MainServiceImpl implements MainService {
     private final ProducerService producerService;
     private final AppUserDAO appUserDAO;
 
+    private final FileService fileService;
+
     public MainServiceImpl(RawDataDAO rawDataDAO,
                            ProducerService producerService,
-                           AppUserDAO appUserDAO) {
+                           AppUserDAO appUserDAO,
+                           FileService fileService) {
         this.rawDataDAO = rawDataDAO;
         this.producerService = producerService;
         this.appUserDAO = appUserDAO;
+        this.fileService = fileService;
     }
 
     @Override
@@ -74,8 +82,14 @@ public class MainServiceImpl implements MainService {
         if (isNotAllowToSendContent(chatId, appUser)) {
             return;
         }
-        // TODO add save doc.
-        sendAnswer(DOC_UPLOAD_SUCCESS, chatId);
+        try {
+            AppDocument document = fileService.processDoc(update.getMessage());
+            //TODO needed actual link.
+            sendAnswer(DOC_UPLOAD_SUCCESS, chatId);
+        } catch (UploadFileException exception) {
+            log.error(exception);
+            sendAnswer(DOC_UPLOAD_FAILED, chatId);
+        }
     }
 
     private boolean isNotAllowToSendContent(Long chatId, AppUsers appUser) {

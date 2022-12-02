@@ -5,7 +5,7 @@ public enum ServiceCommand {
     REGISTRATION("/registration"),
     CANCEL("/cancel"),
 
-    START("start");
+    START("/start");
 
     private final String value;
 

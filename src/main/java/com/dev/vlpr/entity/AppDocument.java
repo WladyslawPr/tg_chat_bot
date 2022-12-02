@@ -15,7 +15,7 @@ public class AppDocument {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    private String telegramField;
+    private String telegramFileId;
     private String docName;
     @OneToOne
     private BinaryContent binaryContent;
