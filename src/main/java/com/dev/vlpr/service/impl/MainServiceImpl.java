@@ -3,6 +3,7 @@ package com.dev.vlpr.service.impl;
 import com.dev.vlpr.dao.AppUserDAO;
 import com.dev.vlpr.dao.RawDataDAO;
 import com.dev.vlpr.entity.AppDocument;
+import com.dev.vlpr.entity.AppPhoto;
 import com.dev.vlpr.entity.AppUsers;
 import com.dev.vlpr.entity.RawData;
 import com.dev.vlpr.entity.enums.ServiceCommand;
@@ -31,12 +32,12 @@ public class MainServiceImpl implements MainService {
     private static final String DOC_UPLOAD_SUCCESS = "document uploaded successfully: link to download -  ";
     private static final String DOC_UPLOAD_FAILED = "file upload failed, please try again";
     private static final String PHOTO_UPLOAD_SUCCESS = "photo uploaded successfully: link to download -  ";
+    private static final String PHOTO_UPLOAD_FAILED = "photo upload failed, please try again";
     private static final String CANCEL_CURRENT_COMMAND = "cancel the current command with /cancel to send files.";
     private static final String REGISTER_OR_ACTIVATE = "register or activate your account to download content.";
     private final RawDataDAO rawDataDAO;
     private final ProducerService producerService;
     private final AppUserDAO appUserDAO;
-
     private final FileService fileService;
 
     public MainServiceImpl(RawDataDAO rawDataDAO,
@@ -92,6 +93,26 @@ public class MainServiceImpl implements MainService {
         }
     }
 
+    @Override
+    public void processPhotoMessage(Update update) {
+        saveRowData(update);
+        var appUser = findOrSaveAppUser(update);
+        var chatId = update.getMessage().getChatId();
+        if (isNotAllowToSendContent(chatId, appUser)) {
+            return;
+        }
+        try {
+            AppPhoto photo = fileService.processPhoto(update.getMessage());
+            //TODO needed actual link.
+            sendAnswer(PHOTO_UPLOAD_SUCCESS, chatId);
+        } catch (UploadFileException exception) {
+            log.error(exception);
+            sendAnswer(PHOTO_UPLOAD_FAILED, chatId);
+
+        }
+
+    }
+
     private boolean isNotAllowToSendContent(Long chatId, AppUsers appUser) {
         var userState = appUser.getState();
         if (!appUser.getIsActive()) {
@@ -103,19 +124,6 @@ public class MainServiceImpl implements MainService {
         }
         return false;
     }
-
-    @Override
-    public void processPhotoMessage(Update update) {
-        saveRowData(update);
-        var appUser = findOrSaveAppUser(update);
-        var chatId = update.getMessage().getChatId();
-        if (isNotAllowToSendContent(chatId, appUser)) {
-            return;
-        }
-        // TODO add save photo.
-        sendAnswer(PHOTO_UPLOAD_SUCCESS, chatId);
-    }
-
 
     private void sendAnswer(String output, Long chatId) {
         SendMessage sendMessage = new SendMessage();
@@ -151,14 +159,12 @@ public class MainServiceImpl implements MainService {
                 + "/registration - registration users.";
     }
 
-
     private void saveRowData(Update update) {
         RawData rawData = RawData.builder()
                 .update(update)
                 .build();
         rawDataDAO.save(rawData);
     }
-
 
     private AppUsers findOrSaveAppUser(Update update) {
         User telegramUser = update.getMessage().getFrom();
