@@ -6,6 +6,7 @@ import com.dev.vlpr.entity.AppDocument;
 import com.dev.vlpr.entity.AppPhoto;
 import com.dev.vlpr.entity.AppUsers;
 import com.dev.vlpr.entity.RawData;
+import com.dev.vlpr.entity.enums.LinkType;
 import com.dev.vlpr.entity.enums.ServiceCommand;
 import com.dev.vlpr.exceptions.UploadFileException;
 import com.dev.vlpr.service.FileService;
@@ -52,7 +53,7 @@ public class MainServiceImpl implements MainService {
 
     @Override
     public void processTextMessage(Update update) {
-        saveRowData(update);
+        saveRawData(update);
         var appUser = findOrSaveAppUser(update);
         var userState = appUser.getState();
         var text = update.getMessage().getText();
@@ -77,7 +78,7 @@ public class MainServiceImpl implements MainService {
 
     @Override
     public void processDocMessage(Update update) {
-        saveRowData(update);
+        saveRawData(update);
         var appUser = findOrSaveAppUser(update);
         var chatId = update.getMessage().getChatId();
         if (isNotAllowToSendContent(chatId, appUser)) {
@@ -85,8 +86,9 @@ public class MainServiceImpl implements MainService {
         }
         try {
             AppDocument document = fileService.processDoc(update.getMessage());
-            //TODO needed actual link.
-            sendAnswer(DOC_UPLOAD_SUCCESS, chatId);
+            String link = fileService.generateLink(document.getId(), LinkType.GET_DOC);
+            var answer = DOC_UPLOAD_SUCCESS + link;
+            sendAnswer(answer, chatId);
         } catch (UploadFileException exception) {
             log.error(exception);
             sendAnswer(DOC_UPLOAD_FAILED, chatId);
@@ -95,7 +97,7 @@ public class MainServiceImpl implements MainService {
 
     @Override
     public void processPhotoMessage(Update update) {
-        saveRowData(update);
+        saveRawData(update);
         var appUser = findOrSaveAppUser(update);
         var chatId = update.getMessage().getChatId();
         if (isNotAllowToSendContent(chatId, appUser)) {
@@ -103,8 +105,10 @@ public class MainServiceImpl implements MainService {
         }
         try {
             AppPhoto photo = fileService.processPhoto(update.getMessage());
-            //TODO needed actual link.
-            sendAnswer(PHOTO_UPLOAD_SUCCESS, chatId);
+            String link = fileService.generateLink(photo.getId(), LinkType.GET_PHOTO);
+            var answer = PHOTO_UPLOAD_SUCCESS + link;
+
+            sendAnswer(answer, chatId);
         } catch (UploadFileException exception) {
             log.error(exception);
             sendAnswer(PHOTO_UPLOAD_FAILED, chatId);
@@ -159,7 +163,7 @@ public class MainServiceImpl implements MainService {
                 + "/registration - registration users.";
     }
 
-    private void saveRowData(Update update) {
+    private void saveRawData (Update update) {
         RawData rawData = RawData.builder()
                 .update(update)
                 .build();

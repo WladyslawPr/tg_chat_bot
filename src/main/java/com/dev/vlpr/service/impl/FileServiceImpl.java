@@ -1,11 +1,13 @@
 package com.dev.vlpr.service.impl;
 
+import com.dev.vlpr.crypto.CryptoTool;
 import com.dev.vlpr.dao.AppDocumentDAO;
 import com.dev.vlpr.dao.AppPhotoDAO;
 import com.dev.vlpr.dao.BinaryContentDAO;
 import com.dev.vlpr.entity.AppDocument;
 import com.dev.vlpr.entity.AppPhoto;
 import com.dev.vlpr.entity.BinaryContent;
+import com.dev.vlpr.entity.enums.LinkType;
 import com.dev.vlpr.exceptions.UploadFileException;
 import com.dev.vlpr.service.FileService;
 import lombok.extern.log4j.Log4j;
@@ -33,17 +35,22 @@ public class FileServiceImpl implements FileService {
     private String fileInfoUri;
     @Value("${service.file_storage.uri}")
     private String fileStorageUri;
+    @Value("${link.address}")
+    private String linkAddress;
     private final AppDocumentDAO appDocumentDAO;
     private final BinaryContentDAO binaryContentDAO;
     private final AppPhotoDAO appPhotoDAO;
+    private final CryptoTool cryptoTool;
 
 
     public FileServiceImpl(AppDocumentDAO appDocumentDAO,
                            BinaryContentDAO binaryContentDAO,
-                           AppPhotoDAO appPhotoDAO) {
+                           AppPhotoDAO appPhotoDAO,
+                           CryptoTool cryptoTool) {
         this.appDocumentDAO = appDocumentDAO;
         this.binaryContentDAO = binaryContentDAO;
         this.appPhotoDAO = appPhotoDAO;
+        this.cryptoTool = cryptoTool;
     }
 
     @Override
@@ -144,6 +151,12 @@ public class FileServiceImpl implements FileService {
         } catch (IOException e) {
             throw new UploadFileException(urlObj.toExternalForm(), e);
         }
+    }
+
+    @Override
+    public String generateLink (Long docId, LinkType linkType) {
+        var hash = cryptoTool.hashOf(docId);
+        return "http://" + linkAddress + "/" + linkType + "?id=" + hash;
     }
 
 }
