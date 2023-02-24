@@ -28,7 +28,6 @@ public class UpdateController {
         this.telegramBot = telegramBot;
     }
 
-    // initial validation of incoming data.
     public void processUpdate(Update update) {
         if (update == null) {
             log.error(RECEIVED_UPDATE_IS_NULL);

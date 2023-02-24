@@ -1,8 +1,12 @@
 package com.dev.vlpr.dao;
 
-import com.dev.vlpr.entity.AppUsers;
+import com.dev.vlpr.entity.AppUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface AppUserDAO extends JpaRepository<AppUsers, Long> {
-    AppUsers findAppUsersByTelegramUserId(Long id);
+import java.util.Optional;
+
+public interface AppUserDAO extends JpaRepository<AppUser, Long> {
+   Optional<AppUser> findByTelegramUserId (Long id);
+   Optional<AppUser> findById(Long id);
+   Optional<AppUser> findByEmail(String email);
 }
