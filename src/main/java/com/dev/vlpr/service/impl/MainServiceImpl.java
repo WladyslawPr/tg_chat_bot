@@ -4,11 +4,12 @@ import com.dev.vlpr.dao.AppUserDAO;
 import com.dev.vlpr.dao.RawDataDAO;
 import com.dev.vlpr.entity.AppDocument;
 import com.dev.vlpr.entity.AppPhoto;
-import com.dev.vlpr.entity.AppUsers;
+import com.dev.vlpr.entity.AppUser;
 import com.dev.vlpr.entity.RawData;
 import com.dev.vlpr.entity.enums.LinkType;
 import com.dev.vlpr.entity.enums.ServiceCommand;
 import com.dev.vlpr.exceptions.UploadFileException;
+import com.dev.vlpr.service.AppUserService;
 import com.dev.vlpr.service.FileService;
 import com.dev.vlpr.service.MainService;
 import com.dev.vlpr.service.ProducerService;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
+
+import java.util.Optional;
 
 import static com.dev.vlpr.entity.enums.ServiceCommand.*;
 import static com.dev.vlpr.entity.enums.UserState.BASIC_STATE;
@@ -40,15 +43,18 @@ public class MainServiceImpl implements MainService {
     private final ProducerService producerService;
     private final AppUserDAO appUserDAO;
     private final FileService fileService;
+    private final AppUserService appUserService;
 
     public MainServiceImpl(RawDataDAO rawDataDAO,
                            ProducerService producerService,
                            AppUserDAO appUserDAO,
-                           FileService fileService) {
+                           FileService fileService,
+                           AppUserService appUserService) {
         this.rawDataDAO = rawDataDAO;
         this.producerService = producerService;
         this.appUserDAO = appUserDAO;
         this.fileService = fileService;
+        this.appUserService = appUserService;
     }
 
     @Override
@@ -65,7 +71,7 @@ public class MainServiceImpl implements MainService {
         } else if (BASIC_STATE.equals(userState)) {
             output = processServiceCommand(appUser, text);
         } else if (WAIT_FOR_EMAIL_STATE.equals(userState)) {
-            //TODO add processing email.
+            output = appUserService.setEmail(appUser, text);
         } else {
             log.error(UNKNOWN_USER_STATE + userState);
             output = ERROR_RETRY_INPUT;
@@ -117,7 +123,7 @@ public class MainServiceImpl implements MainService {
 
     }
 
-    private boolean isNotAllowToSendContent(Long chatId, AppUsers appUser) {
+    private boolean isNotAllowToSendContent(Long chatId, AppUser appUser) {
         var userState = appUser.getState();
         if (!appUser.getIsActive()) {
             sendAnswer(REGISTER_OR_ACTIVATE, chatId);
@@ -136,17 +142,16 @@ public class MainServiceImpl implements MainService {
         producerService.producerAnswer(sendMessage);
     }
 
-    private String cancelProcess(AppUsers appUser) {
+    private String cancelProcess(AppUser appUser) {
         appUser.setState(BASIC_STATE);
         appUserDAO.save(appUser);
         return REJECT_COMMAND;
     }
 
-    private String processServiceCommand(AppUsers appUser, String cmd) {
+    private String processServiceCommand(AppUser appUser, String cmd) {
         var serviceCommand = ServiceCommand.fromValue(cmd);
         if (REGISTRATION.equals(serviceCommand)) {
-            // TODO add registration.
-            return "unavailable";
+            return appUserService.register(appUser);
         } else if (HELP.equals(serviceCommand)) {
             return help();
         } else if (START.equals(serviceCommand)) {
@@ -170,23 +175,22 @@ public class MainServiceImpl implements MainService {
         rawDataDAO.save(rawData);
     }
 
-    private AppUsers findOrSaveAppUser(Update update) {
+    private AppUser findOrSaveAppUser(Update update) {
         User telegramUser = update.getMessage().getFrom();
-        AppUsers persistentAppUser = appUserDAO.findAppUsersByTelegramUserId(telegramUser.getId());
+        Optional<AppUser> persistentAppUser = appUserDAO.findByTelegramUserId(telegramUser.getId());
 
-        if (persistentAppUser == null) {
-            AppUsers transientAppUser = AppUsers.builder()
+        if (persistentAppUser.isEmpty()) {
+            AppUser transientAppUser = AppUser.builder()
                     .telegramUserId(telegramUser.getId())
                     .userName(telegramUser.getUserName())
                     .firstName(telegramUser.getFirstName())
                     .lastName(telegramUser.getLastName())
-                    //TODO change default value after adding registration
-                    .isActive(true)
+                    .isActive(false)
                     .state(BASIC_STATE)
                     .build();
             return appUserDAO.save(transientAppUser);
         }
-        return persistentAppUser;
+        return persistentAppUser.get();
     }
 
 

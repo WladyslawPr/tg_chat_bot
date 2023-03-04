@@ -16,7 +16,7 @@ import java.util.Objects;
 @AllArgsConstructor
 @Entity
 @Table(name = "app_users")
-public class AppUsers {
+public class AppUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,7 +35,7 @@ public class AppUsers {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        AppUsers appUsers = (AppUsers) o;
+        AppUser appUsers = (AppUser) o;
         return id != null && Objects.equals(id, appUsers.id);
     }
 
